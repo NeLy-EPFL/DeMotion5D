@@ -10,22 +10,40 @@ except ImportError:
     print("Make sure run_elastix's scripts folder is on your PYTHONPATH")
     sys.exit(1)
 
+verbose = False
 move_failures = False
-if '-m' in sys.argv:
-    move_failures = True
-    sys.argv.remove('-m')
+correlation_threshold = 0.95
+bending_threshold = 0.000004
+filenames = []
+have_processed_n_next_args = 0
+for n, arg in enumerate(sys.argv[1:]):
+    if have_processed_n_next_args:
+        have_processed_n_next_args -= 1
+        continue
+    elif arg == '-v':
+        verbose = True
+    elif arg == '-m':
+        move_failures = True
+    elif arg == '-c':
+        correlation_threshold = float(sys.argv[n+2])
+        have_processed_n_next_args = 1
+    elif arg == '-b':
+        bending_threshold = float(sys.argv[n+2])
+        have_processed_n_next_args = 1
+    else:
+        filenames.append(arg)
 
-fns = sys.argv[1:]
+
 
 #data = []
 pf = {'pass': 0, 'fail': 0}
-for fn in fns:
+for fn in filenames:
     log = ElastixLog(fn)
     #data.append([log.final_correlation,
     #             log.final_bending_metric])
     #             log.asgd_settings()['SP_a']])
-    if not log.good_results(correlation_threshold=0.95,
-                            bending_threshold=0.000004,
+    if not log.good_results(correlation_threshold=correlation_threshold,
+                            bending_threshold=bending_threshold,
                             verbose=False):
         print(f'Bad results: {fn}, {log.final_correlation}, {log.final_bending_metric}')
         pf['fail'] += 1
@@ -41,7 +59,8 @@ for fn in fns:
             print(f'Renaming {fn} to {fn}_fail{failnum}')
             os.rename(fn, fn + f'_fail{failnum}')
     else:
-        #print(f'Pass: {fn}')
+        if verbose:
+            print(f'Pass: {fn}, {log.final_correlation}, {log.final_bending_metric}')
         pf['pass'] += 1
 
 print(f'Pass: {pf["pass"]}, Fail: {pf["fail"]}')
