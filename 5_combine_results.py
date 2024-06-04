@@ -8,14 +8,14 @@ import numpy as np
 import npimage
 
 filenames = sorted(sys.argv[1:])
-print(filenames)
 im_shape = npimage.load(filenames[0]).shape
-result = np.zeros((len(filenames),) + im_shape, dtype=np.float32)
-print('result.shape', result.shape)
-for t, fn in tqdm(enumerate(filenames)):
+result = np.zeros((len(filenames),) + im_shape, dtype=np.uint16)
+print('Combined volume will have shape', result.shape)
+for t, fn in tqdm(enumerate(filenames), total=len(filenames)):
     # Check that a 4 digit version of i is in the filename
     assert f'{t:04d}' in fn
-    result[t] = npimage.load(fn)
+    im = np.clip(npimage.load(fn), 0, None)
+    result[t] = im.astype(np.uint16)
 
 out_fn = 'combined.nrrd'
 if os.path.exists(out_fn):
