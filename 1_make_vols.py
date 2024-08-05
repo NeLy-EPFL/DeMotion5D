@@ -6,8 +6,7 @@ from pathlib import Path
 from tqdm import tqdm
 import npimage
 
-#template_timepoint = 374
-template_timepoint = None
+target_timepoint = 0
 planes = slice(1, -1)
 
 fn = Path(sys.argv[1])
