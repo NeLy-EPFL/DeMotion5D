@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+"""
+Example usage:
+3_assess_results.py timepoints/t*elastix/Bspline/48spacing_300bendingweight -m
+
+"""
 
 import os
 import sys
@@ -32,7 +37,6 @@ for n, arg in enumerate(sys.argv[1:]):
         have_processed_n_next_args = 1
     else:
         filenames.append(arg)
-
 
 
 #data = []
