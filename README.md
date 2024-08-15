@@ -3,7 +3,7 @@
 Remove sample movement in 5D microscopy data (xyz plus time plus color)
 
 ## Installation
-Install [run_elastix](https://github.com/htem/run_elastix)
+Install [run_elastix](https://github.com/htem/run_elastix) by following the instructions in its README. You can skip the part of the instructions where you're given the option to download a standard template to align to and to set the path to the standard template, because we will just be registering your microscopy data to itself at different time points.
 
 ## Prepare your image data
 The only required input to this pipeline is a timeseries of 3D image volumes. (Typically you will have multiple of these, one for each color channel in your imaging data.) The first step (see below) converts a single 4D image volume (tzyx for a single color channel) into a series of 3D image volume files, which is the necessary starting point for step 2. If you have already created a timeseries of 3D volumes yourself, you can start with step 2.
