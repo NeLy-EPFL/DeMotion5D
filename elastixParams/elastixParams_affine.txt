@@ -10,15 +10,15 @@
 (ASGDParameterEstimationMethod "DisplacementDistribution")
 (NumberOfSpatialSamples 10000)
 (CheckNumberOfSamples "true")
-(RequiredRatioOfValidSamples 0.5)
+(RequiredRatioOfValidSamples 0.05)
 (MaximumNumberOfSamplingAttempts 3)
 (NewSamplesEveryIteration "true")
 (ImageSampler "RandomCoordinate")
 
 
 (Transform "AffineTransform")
-//(AutomaticTransformInitialization "true")
-//(AutomaticTransformInitializationMethod "CenterOfGravity")
+(AutomaticTransformInitialization "true")
+(AutomaticTransformInitializationMethod "CenterOfGravity")
 (AutomaticScalesEstimation "true")
 (HowToCombineTransforms "Compose")
 
