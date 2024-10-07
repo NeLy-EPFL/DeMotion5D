@@ -24,6 +24,7 @@ fi
 verbose=false
 fake=false
 num_cores=28
+alignment_settings='*'
 
 positionalArgs=()
 unknownOptions=()
@@ -38,6 +39,10 @@ while [ "$#" -gt 0 ]; do
             fake=true
             >&2 echo "Running fake"
             shift
+        ;;
+        -s|--settings)
+            alignment_settings="$2"
+            shift; shift
         ;;
         -c|--cores)
             num_cores="$2"
@@ -86,10 +91,14 @@ for target_folder in "${@:2}"; do
         echo ""
         echo "Processing $target_file"
         t=$(basename "$target_file" | sed 's/t\([0-9]*\).nrrd/\1/')
-        transform_pattern="$source_folder"/timepoints/t"$t"_elastix_to_fixed_template/elastix_Bspline/*/TransformParameters.0.txt
+        transform_pattern="$source_folder"/timepoints/t"$t"_elastix/Bspline/${alignment_settings}/TransformParameters.0.txt
         matched_files=($transform_pattern)
         if [ ${#matched_files[@]} -gt 1 ]; then
-            >&2 echo "ERROR: Multiple transforms found for timepoint $t"
+            >&2 echo "ERROR: Multiple transforms found for timepoint $t:"
+            for f in "${matched_files[@]}"; do
+                >&2 echo "$f"
+            done
+            echo "Use the -s flag to specify a more specific pattern."
             exit 1
         fi
         transform_file="${matched_files[0]}"
@@ -98,6 +107,7 @@ for target_folder in "${@:2}"; do
             exit 1
         fi
         $transformix -in "$target_file" -out "$target_folder"/timepoints_transformed -tp "$transform_file" -threads $num_cores
+        echo transformix -in "$target_file" -out "$target_folder"/timepoints_transformed -tp "$transform_file" -threads $num_cores >> "$target_folder"/timepoints_transformed/transformix_commands.txt
         $mv "$target_folder"/timepoints_transformed/result.nrrd "$target_folder"/timepoints_transformed/t"$t".nrrd
     done
     $rm "$target_folder"/timepoints_transformed/transformix.log
