@@ -19,6 +19,7 @@ from pathlib import Path
 
 from tqdm import tqdm
 import numpy as np
+import nrrd
 import npimage
 
 if '-t' in sys.argv:
@@ -71,6 +72,8 @@ if 'spacing' in fn and 'bendingweight' in fn:
         i -= 1
     bendingweight = fn.split('bendingweight')[0][i+1:]
     out_fn = f'combined_{spacing}s{bendingweight}w.nrrd'
+elif 'affine' in fn:
+    out_fn = 'combined_affine.nrrd'
 else:
     out_fn = 'combined.nrrd'
 if os.path.exists(out_fn):
@@ -85,7 +88,8 @@ if os.getcwd().endswith('_demotion'):
     unregistered_data_fn = os.path.join(os.path.dirname(os.getcwd()),
                                         unregistered_data_fn)
     if os.path.exists(unregistered_data_fn):
-        _, metadata = npimage.load(unregistered_data_fn, return_metadata=True)
+        metadata = nrrd.read_header(unregistered_data_fn)
+        npimage.utils.transpose_metadata(metadata, inplace=True)
     else:
         print(f'WARNING: Could not find {unregistered_data_fn} to copy metadata from')
 
