@@ -16,10 +16,22 @@ if '-t' in sys.argv:
     sys.argv.remove('-t')
     sys.argv.remove(str(target_timepoint))
 
+use_n_most_correlated_timepoints = 5
+if '-n' in sys.argv:
+    if sys.argv[-1] == '-n':
+        raise ValueError('No number of most correlated timepoints provided after -n')
+    use_n_most_correlated_timepoints = int(sys.argv[sys.argv.index('-n') + 1])
+    sys.argv.remove('-n')
+    sys.argv.remove(str(use_n_most_correlated_timepoints))
+
+overwrite = False
+if '-o' in sys.argv:
+    overwrite = True
+    sys.argv.remove('-o')
 
 fn = Path(sys.argv[1])
-im, metadata = npimage.load(fn, return_metadata=True)
-if not metadata['space dimension'] == 4:
+im, metadata_4d = npimage.load(fn, return_metadata=True)
+if not metadata_4d['space dimension'] == 4:
     raise ValueError('Input image must have 4 dimensions (t, scan axis, depth, width')
 # Discard the first and last planes, which typically have some artifacts from
 # the galvo returning to the start position during part of the exposure time
@@ -32,11 +44,12 @@ im = im[:, planes_to_keep, z_to_keep, :]
 print('im.shape after discarding edge planes and z indices:', im.shape)
 
 # Strip the time dimension from the metadata
-del metadata['sizes']
-del metadata['dimension']
-del metadata['space dimension']
-metadata['space directions'] = metadata['space directions'][1:, 1:]
-metadata['space units'] = metadata['space units'][1:]
+del metadata_4d['sizes']
+metadata_3d = metadata_4d.copy()
+del metadata_3d['dimension']
+del metadata_3d['space dimension']
+metadata_3d['space directions'] = metadata_3d['space directions'][1:, 1:]
+metadata_3d['space units'] = metadata_3d['space units'][1:]
 
 output_root = fn.parent / f'{fn.stem}_demotion'
 output_timepoints = output_root / 'timepoints'
@@ -56,22 +69,27 @@ correlations = []
 for t in trange(im.shape[0]):
     correlations.append(np.corrcoef(im[most_stable_timepoint, ...].ravel(),
                                     im[t, ...].ravel())[0, 1])
-top_4_correlated_timepoints = np.argsort(correlations)[-4:]
-print('The 4 timepoints most correlated with the most stable time point are',
-      top_4_correlated_timepoints)
-mean_stable_image = np.mean([im[t, ...] for t in top_4_correlated_timepoints],
-                            axis=0)
+n_most_correlated_timepoints = np.argsort(correlations)[-use_n_most_correlated_timepoints:]
+print(f'The {use_n_most_correlated_timepoints} timepoints most correlated with'
+      f' the most stable time point are {n_most_correlated_timepoints}')
+stable_images = [im[t, ...] for t in n_most_correlated_timepoints]
+npimage.save(np.stack(stable_images),
+             output_root / 'stable_images.nrrd',
+             metadata=metadata_4d,
+             overwrite=overwrite)
+mean_stable_image = np.mean(stable_images, axis=0)
 npimage.save(mean_stable_image,
              output_root / 'mean_stable_image.nrrd',
-             metadata=metadata)
+             metadata=metadata_3d,
+             overwrite=overwrite)
 
 # Create a 3D volume for each timepoint and save each one to a nrrd file
 interval = 1
 for t in trange(0, im.shape[0], interval):
     npimage.save(im[t, ...],
                  output_timepoints / f't{t:04d}.nrrd',
-                 metadata=metadata,
-                 overwrite=True)
+                 metadata=metadata_3d,
+                 overwrite=overwrite)
 
 if not (output_root / 'target.nrrd').exists():
     if target_timepoint is None:
