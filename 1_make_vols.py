@@ -84,33 +84,34 @@ output_root = fn.parent / f'{fn.stem}_demotion'
 output_timepoints = output_root / 'timepoints'
 output_timepoints.mkdir(exist_ok=True, parents=True)
 
-# Find the most stable image – the one that has the highest average
-# correlation with its 4 closest neighboring timepoints.
-vprint('Finding the most stable timepoint...')
-correlations = []
-for t in trange(2, im.shape[0]-2):
-    correlations.append(np.mean([np.corrcoef(im[t, ...].ravel(),
-                                             im[t+delta, ...].ravel())[0, 1]
-                                 for delta in [-2, -1, 1, 2]]))
-most_stable_timepoint = np.argmax(correlations) + 2
-vprint('The most stable time point is', most_stable_timepoint)
-correlations = []
-for t in trange(im.shape[0]):
-    correlations.append(np.corrcoef(im[most_stable_timepoint, ...].ravel(),
-                                    im[t, ...].ravel())[0, 1])
-n_most_correlated_timepoints = np.argsort(correlations)[-use_n_most_correlated_timepoints:]
-vprint(f'The {use_n_most_correlated_timepoints} timepoints most correlated with'
-       f' the most stable time point are {n_most_correlated_timepoints}')
-stable_images = [im[t, ...] for t in n_most_correlated_timepoints]
-npimage.save(np.stack(stable_images),
-             output_root / 'stable_images.nrrd',
-             metadata=metadata_4d,
-             overwrite=overwrite)
-mean_stable_image = np.mean(stable_images, axis=0).astype(im.dtype)
-npimage.save(mean_stable_image,
-             output_root / 'mean_stable_image.nrrd',
-             metadata=metadata_3d,
-             overwrite=overwrite)
+if target_timepoint is None:
+    # Find the most stable image – the one that has the highest average
+    # correlation with its 4 closest neighboring timepoints.
+    vprint('Finding the most stable timepoint...')
+    correlations = []
+    for t in trange(2, im.shape[0]-2):
+        correlations.append(np.mean([np.corrcoef(im[t, ...].ravel(),
+                                                 im[t+delta, ...].ravel())[0, 1]
+                                     for delta in [-2, -1, 1, 2]]))
+    most_stable_timepoint = np.argmax(correlations) + 2
+    vprint('The most stable time point is', most_stable_timepoint)
+    correlations = []
+    for t in trange(im.shape[0]):
+        correlations.append(np.corrcoef(im[most_stable_timepoint, ...].ravel(),
+                                        im[t, ...].ravel())[0, 1])
+    n_most_correlated_timepoints = np.argsort(correlations)[-use_n_most_correlated_timepoints:]
+    vprint(f'The {use_n_most_correlated_timepoints} timepoints most correlated with'
+           f' the most stable time point are {n_most_correlated_timepoints}')
+    stable_images = [im[t, ...] for t in n_most_correlated_timepoints]
+    npimage.save(np.stack(stable_images),
+                 output_root / 'stable_images.nrrd',
+                 metadata=metadata_4d,
+                 overwrite=overwrite)
+    mean_stable_image = np.mean(stable_images, axis=0).astype(im.dtype)
+    npimage.save(mean_stable_image,
+                 output_root / 'mean_stable_image.nrrd',
+                 metadata=metadata_3d,
+                 overwrite=overwrite)
 
 # Create a 3D volume for each timepoint and save each one to a nrrd file
 interval = 1
