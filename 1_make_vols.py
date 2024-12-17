@@ -89,11 +89,11 @@ if target_timepoint is None:
     # correlation with its 4 closest neighboring timepoints.
     vprint('Finding the most stable timepoint...')
     correlations = []
-    for t in trange(2, im.shape[0]-2):
+    for t in trange(10, im.shape[0]-2):
         correlations.append(np.mean([np.corrcoef(im[t, ...].ravel(),
                                                  im[t+delta, ...].ravel())[0, 1]
                                      for delta in [-2, -1, 1, 2]]))
-    most_stable_timepoint = np.argmax(correlations) + 2
+    most_stable_timepoint = np.argmax(correlations) + 10
     vprint('The most stable time point is', most_stable_timepoint)
     correlations = []
     for t in trange(im.shape[0]):
