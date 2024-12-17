@@ -11,6 +11,7 @@ will be replaced by 'target.nrrd' in the combined volume.
 
 Usage:
     5_combine_results.py [-t TARGET_TIMEPOINT] FILE1 [FILE2 ...]
+
 """
 
 import sys
@@ -22,6 +23,12 @@ import numpy as np
 import nrrd
 import npimage
 
+do_zeroing = True
+if '-z' in sys.argv:
+    sys.argv.remove('-z')
+    do_zeroing = False
+
+target_timepoint = -1
 if '-t' in sys.argv:
     if sys.argv[-1] == '-t':
         raise ValueError('-t must be followed by a number')
@@ -29,19 +36,12 @@ if '-t' in sys.argv:
     # Remove the target timepoint from the list of files
     sys.argv.remove('-t')
     sys.argv.remove(str(target_timepoint))
-#    target = [f for f in sys.argv[1] if f'{target_timepoint:04d}' in f]
-#    if len(target) != 1:
-#        raise ValueError(f'Could not find target timepoint {target_timepoint}')
-#    target = Path(target[0])
 elif Path('target.nrrd').exists():
     # Extract the target of the symlink
-    #target = Path('target.nrrd').resolve()
-    #target_timepoint = int(target.stem.strip('t'))
     try:
         target_timepoint = int(Path('target.nrrd').resolve().stem.strip('t'))
     except ValueError:
         print('WARNING: Could not determine target timepoint, so not using one')
-        target_timepoint = -1
 
 filenames = sorted(sys.argv[1:])
 if target_timepoint >= 0:
@@ -51,8 +51,9 @@ if target_timepoint >= 0:
         elif f'{target_timepoint+1:04d}' in filenames[target_timepoint+1]:
             filenames[target_timepoint] = 'target.nrrd'
 
-im_shape = npimage.load(filenames[0]).shape
-result = np.zeros((len(filenames),) + im_shape, dtype=np.uint16)
+im0, im0_metadata = npimage.load(filenames[0], return_metadata=True)
+im0_shape = im0.shape
+result = np.zeros((len(filenames),) + im0_shape, dtype=np.uint16)
 print('Combined volume will have shape', result.shape)
 for t, fn in tqdm(enumerate(filenames), total=len(filenames)):
     # Check that a 4 digit version of i is in the filename
@@ -60,7 +61,10 @@ for t, fn in tqdm(enumerate(filenames), total=len(filenames)):
         assert f'{t:04d}' in fn, f'Filename {fn} does not contain {t:04d}'
     im = np.clip(npimage.load(fn), 0, None)
     result[t] = im.astype(np.uint16)
+if do_zeroing:
+    result[:, (result == 0).any(axis=0)] = 0
 
+# The following operates on the last filename in the loop
 if 'spacing' in fn and 'bendingweight' in fn:
     # Find the numbers immediately before 'spacing' and 'bendingweight'
     i = -1
@@ -81,19 +85,23 @@ if os.path.exists(out_fn):
     out_fn = 'tmp.nrrd'
 # If the current working directory ends with `_demotion`, pull the metadata
 # from the nrrd file with the same name as this directory
-metadata = None
+metadata_4d = None
 if os.getcwd().endswith('_demotion'):
     cwd = os.getcwd()
     unregistered_data_fn = cwd.split('/')[-1][:-len('_demotion')] + '.nrrd'
     unregistered_data_fn = os.path.join(os.path.dirname(os.getcwd()),
                                         unregistered_data_fn)
     if os.path.exists(unregistered_data_fn):
-        metadata = nrrd.read_header(unregistered_data_fn)
-        npimage.utils.transpose_metadata(metadata, inplace=True)
+        metadata_4d = nrrd.read_header(unregistered_data_fn)
+        npimage.utils.transpose_metadata(metadata_4d, inplace=True)
     else:
         print(f'WARNING: Could not find {unregistered_data_fn} to copy metadata from')
 
-npimage.save(result, out_fn, metadata=metadata)
-npimage.save(result.mean(axis=1),
-             out_fn.replace('.nrrd', '_zmean.nrrd'),
-             metadata=metadata)
+npimage.save(result, out_fn, metadata=metadata_4d)
+if result.ndim == 4:
+    npimage.save(result.mean(axis=0).astype(result.dtype),
+                 out_fn.replace('.nrrd', '_tmean.nrrd'),
+                 metadata=im0_metadata)
+    npimage.save(np.percentile(result, 95, axis=0).astype(result.dtype),
+                 out_fn.replace('.nrrd', '_t95%.nrrd'),
+                 metadata=im0_metadata)
