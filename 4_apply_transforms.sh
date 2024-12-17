@@ -24,7 +24,7 @@ fi
 verbose=false
 fake=false
 num_cores=28
-alignment_settings='*'
+alignment_settings='Bspline/*'
 
 positionalArgs=()
 unknownOptions=()
@@ -87,11 +87,15 @@ fi
 source_folder="$1"
 for target_folder in "${@:2}"; do
     mkdir "$target_folder"/timepoints_transformed 2> /dev/null
+    if ! ls "$target_folder"/timepoints/t*.nrrd 1> /dev/null 2>&1; then
+        >&2 echo "ERROR: No nrrd files found in $target_folder/timepoints"
+        exit 1
+    fi
     for target_file in "$target_folder"/timepoints/t*.nrrd; do
         echo ""
         echo "Processing $target_file"
         t=$(basename "$target_file" | sed 's/t\([0-9]*\).nrrd/\1/')
-        transform_pattern="$source_folder"/timepoints/t"$t"_elastix/Bspline/${alignment_settings}/TransformParameters.0.txt
+        transform_pattern="$source_folder"/timepoints/t"$t"_elastix/${alignment_settings}/TransformParameters.0.txt
         matched_files=($transform_pattern)
         if [ ${#matched_files[@]} -gt 1 ]; then
             >&2 echo "ERROR: Multiple transforms found for timepoint $t:"
