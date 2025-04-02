@@ -9,9 +9,7 @@ a symlink to a file with a 4 digit number in its name, or if a
 timepoint is specified via the -t <number> option, that timepoint
 will be replaced by 'target.nrrd' in the combined volume.
 
-Usage:
-    5_combine_results.py [-t TARGET_TIMEPOINT] FILE1 [FILE2 ...]
-
+dmo5_combine_timepoints.py [-t TARGET_TIMEPOINT] [-m MASK_FILE] [-z|--skip-zeroing] FILE1 [FILE2 ...]
 """
 
 import sys
@@ -23,10 +21,21 @@ import numpy as np
 import nrrd
 import npimage
 
+if len(sys.argv) < 2:
+    print(__doc__)
+    sys.exit(1)
+
 do_zeroing = True
 if '-z' in sys.argv:
     sys.argv.remove('-z')
     do_zeroing = False
+
+mask = None
+if '-m' in sys.argv:
+    mask_fn = sys.argv[sys.argv.index('-m')+1]
+    sys.argv.remove('-m')
+    sys.argv.remove(mask_fn)
+    mask = npimage.load(mask_fn)
 
 target_timepoint = -1
 if '-t' in sys.argv:
@@ -52,8 +61,9 @@ if target_timepoint >= 0:
             filenames[target_timepoint] = 'target.nrrd'
 
 im0, im0_metadata = npimage.load(filenames[0], return_metadata=True)
-im0_shape = im0.shape
-result = np.zeros((len(filenames),) + im0_shape, dtype=np.uint16)
+if mask is not None and mask.shape != im0.shape:
+    raise ValueError(f'Mask shape {mask.shape} does not match image shape {im0.shape}')
+result = np.zeros((len(filenames),) + im0.shape, dtype=np.uint16)
 print('Combined volume will have shape', result.shape)
 for t, fn in tqdm(enumerate(filenames), total=len(filenames)):
     # Check that a 4 digit version of i is in the filename
@@ -63,6 +73,8 @@ for t, fn in tqdm(enumerate(filenames), total=len(filenames)):
     result[t] = im.astype(np.uint16)
 if do_zeroing:
     result[:, (result == 0).any(axis=0)] = 0
+if mask is not None:
+    result[:, mask == 0] = 0
 
 # The following operates on the last filename in the loop
 if 'spacing' in fn and 'bendingweight' in fn:
@@ -99,9 +111,8 @@ if os.getcwd().endswith('_demotion'):
 
 npimage.save(result, out_fn, metadata=metadata_4d)
 if result.ndim == 4:
-    npimage.save(result.mean(axis=0).astype(result.dtype),
-                 out_fn.replace('.nrrd', '_tmean.nrrd'),
-                 metadata=im0_metadata)
-    npimage.save(np.percentile(result, 95, axis=0).astype(result.dtype),
-                 out_fn.replace('.nrrd', '_t95%.nrrd'),
+    from scipy.ndimage import gaussian_filter
+    result_blur_tmax = gaussian_filter(result, (1.8, 0.7, 0.7, 0.7)).max(axis=0)
+    npimage.save(result_blur_tmax.astype(result.dtype),
+                 out_fn.replace('.nrrd', '_blur_tmax.nrrd'),
                  metadata=im0_metadata)
