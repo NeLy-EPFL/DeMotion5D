@@ -13,7 +13,16 @@ def vprint(*args, **kwargs):
         print(*args, **kwargs)
 
 
+num_frames = None
+#num_frames = 1205
+if num_frames is not None:
+    print('WARNING: num_frames is set to a fixed value. This is only for debugging purposes.')
+
 # Argument parsing
+equalize = False
+if '-e' in sys.argv:
+    equalize = True
+    sys.argv.remove('-e')
 z_to_drop = 2
 if '-z' in sys.argv:
     if sys.argv[-1] == '-z':
@@ -32,9 +41,10 @@ target_timepoint = None
 if '-t' in sys.argv:
     if sys.argv[-1] == '-t':
         raise ValueError('No target timepoint provided after -t')
-    target_timepoint = int(sys.argv[sys.argv.index('-t') + 1])
+    arg = sys.argv[sys.argv.index('-t') + 1]
+    target_timepoint = int(arg)
     sys.argv.remove('-t')
-    sys.argv.remove(str(target_timepoint))
+    sys.argv.remove(arg)
 use_n_most_correlated_timepoints = 5
 if '-n' in sys.argv:
     if sys.argv[-1] == '-n':
@@ -46,15 +56,18 @@ overwrite = False
 if '-o' in sys.argv:
     overwrite = True
     sys.argv.remove('-o')
-verbose = False
+verbose = True
 if '-v' in sys.argv:
     verbose = True
     sys.argv.remove('-v')
 fn = Path(sys.argv[1])
+vprint('Settings:')
 vprint('Dropping', planes_to_drop, 'first and last planes from each volume')
 vprint('Dropping', z_to_drop, 'first and last z indices from each volume')
-vprint('Target timepoint:', target_timepoint)
-vprint('Using the', use_n_most_correlated_timepoints, 'most correlated timepoints')
+if target_timepoint is None:
+    vprint('Will create a target from the', use_n_most_correlated_timepoints, 'most correlated timepoints')
+else:
+    vprint('Target timepoint:', target_timepoint)
 vprint('Overwriting:', overwrite)
 vprint('Input file:', fn)
 # End argument parsing
@@ -69,7 +82,7 @@ planes_to_keep = slice(planes_to_drop, -planes_to_drop if planes_to_drop else No
 # Discard the first few and last few z (depth) indices, which typically have
 # some artifacts from I think a bug in Andor Solis's recording settings.
 z_to_keep = slice(z_to_drop, -z_to_drop if z_to_drop else None)
-im = im[:, planes_to_keep, z_to_keep, :]
+im = im[:num_frames, planes_to_keep, z_to_keep, :]
 vprint('im.shape after discarding edge planes and z indices:', im.shape)
 
 # Strip the time dimension from the metadata
@@ -84,6 +97,16 @@ output_root = fn.parent / f'{fn.stem}_demotion'
 output_timepoints = output_root / 'timepoints'
 output_timepoints.mkdir(exist_ok=True, parents=True)
 
+if equalize:
+    # Rescale each timepoint to have mean 0 and standard deviation 1
+    vprint('Equalizing timepoints...')
+    im = (im - im.mean(axis=(1, 2, 3), keepdims=True)) / im.std(axis=(1, 2, 3), keepdims=True)
+    # Then shift the data to span half the range of uint16, with quarter the
+    # range of uint16 of buffer room below and above the data to make sure that
+    # interpolation that occurs during image registration has no risk of clipping.
+    im_min = im.min()
+    im = ((im - im_min) / (im.max() - im_min) * 2**15 + 2**14).astype(np.uint16)
+
 if target_timepoint is None:
     # Find the most stable image – the one that has the highest average
     # correlation with its 4 closest neighboring timepoints.
@@ -93,7 +116,11 @@ if target_timepoint is None:
         correlations.append(np.mean([np.corrcoef(im[t, ...].ravel(),
                                                  im[t+delta, ...].ravel())[0, 1]
                                      for delta in [-2, -1, 1, 2]]))
+    #most_stable_timepoint = None
+    #print('WARNING: Most stable timepoint has a hardcoded exclusion range of 670-680')
+    #while most_stable_timepoint is None or most_stable_timepoint in range(670, 680):
     most_stable_timepoint = np.argmax(correlations) + 10
+    #    correlations[most_stable_timepoint - 10] = -1
     vprint('The most stable time point is', most_stable_timepoint)
     correlations = []
     for t in trange(im.shape[0]):
