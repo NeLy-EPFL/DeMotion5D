@@ -1,7 +1,11 @@
 #!/bin/bash
 # Example usage:
-# 2_run_elastix.sh timepoints/*nrrd
-# 2_run_elastix.sh /path/to/scan1.nrrd /path/to/scan2.nrrd ...
+# dmo2_run_elastix.sh timepoints/*nrrd
+# dmo2_run_elastix.sh /path/to/scan1.nrrd /path/to/scan2.nrrd ...
+# for i in timepoints/t*nrrd; do if [ ! -e "${i/.nrrd}_elastix/Bspline/48spacing_400bendingweight" ]; then dmo2_run_elastix.sh $i; fi; done
+#
+# TODO:
+# - Add command line arguments for common registration parameters (-s, -w)
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 if [ -f "target_mask.nrrd" ]; then
