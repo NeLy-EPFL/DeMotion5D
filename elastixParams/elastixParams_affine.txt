@@ -6,20 +6,15 @@
 (FixedImagePyramid "FixedRecursiveImagePyramid")
 (MovingImagePyramid "MovingRecursiveImagePyramid")
 
-(Optimizer "AdaptiveStochasticGradientDescent")
-(ASGDParameterEstimationMethod "DisplacementDistribution")
-(NumberOfSpatialSamples 10000)
-(CheckNumberOfSamples "true")
-(RequiredRatioOfValidSamples 0.05)
-(MaximumNumberOfSamplingAttempts 3)
-(NewSamplesEveryIteration "true")
-(ImageSampler "RandomCoordinate")
+(Optimizer "StandardGradientDescent")
+(ImageSampler "Full")
 
-
+//(Transform "EulerTransform")
 (Transform "AffineTransform")
 (AutomaticTransformInitialization "true")
 (AutomaticTransformInitializationMethod "CenterOfGravity")
-(AutomaticScalesEstimation "true")
+(AutomaticScalesEstimation "false")
+(Scales 10000)
 (HowToCombineTransforms "Compose")
 
 (Interpolator "LinearInterpolator")
@@ -39,7 +34,7 @@
 
 (NumberOfResolutions 2)
 (ImagePyramidSchedule 4 4 4  2 2 2)
-(MaximumNumberOfIterations 400 100)
+(MaximumNumberOfIterations 100 200)
 
 
 //Output
