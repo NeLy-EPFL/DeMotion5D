@@ -23,3 +23,12 @@ for fn in $@; do
         -w 400 \
         -n
 done
+
+<<comment
+        --threads 8
+        -a \
+        -b \
+        -s 64 \
+        -w 800 \
+
+comment
