@@ -20,24 +20,28 @@ if num_frames is not None:
 
 # Argument parsing
 equalize = False
+z_to_drop = 2
+planes_to_drop = 1
+target_timepoint = None
+use_n_most_correlated_timepoints = 5
+overwrite = False
+verbose = True
+
 if '-e' in sys.argv:
     equalize = True
     sys.argv.remove('-e')
-z_to_drop = 2
 if '-z' in sys.argv:
     if sys.argv[-1] == '-z':
         raise ValueError('No number of z planes to drop provided after -z')
     z_to_drop = int(sys.argv[sys.argv.index('-z') + 1])
     sys.argv.remove('-z')
     sys.argv.remove(str(z_to_drop))
-planes_to_drop = 1
 if '-p' in sys.argv:
     if sys.argv[-1] == '-p':
         raise ValueError('No number of planes to drop provided after -p')
     planes_to_drop = int(sys.argv[sys.argv.index('-p') + 1])
     sys.argv.remove('-p')
     sys.argv.remove(str(planes_to_drop))
-target_timepoint = None
 if '-t' in sys.argv:
     if sys.argv[-1] == '-t':
         raise ValueError('No target timepoint provided after -t')
@@ -45,18 +49,15 @@ if '-t' in sys.argv:
     target_timepoint = int(arg)
     sys.argv.remove('-t')
     sys.argv.remove(arg)
-use_n_most_correlated_timepoints = 5
 if '-n' in sys.argv:
     if sys.argv[-1] == '-n':
         raise ValueError('No number of most correlated timepoints provided after -n')
     use_n_most_correlated_timepoints = int(sys.argv[sys.argv.index('-n') + 1])
     sys.argv.remove('-n')
     sys.argv.remove(str(use_n_most_correlated_timepoints))
-overwrite = False
 if '-o' in sys.argv:
     overwrite = True
     sys.argv.remove('-o')
-verbose = True
 if '-v' in sys.argv:
     verbose = True
     sys.argv.remove('-v')
