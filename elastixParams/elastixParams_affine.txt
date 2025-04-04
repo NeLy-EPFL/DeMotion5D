@@ -18,8 +18,6 @@
 (HowToCombineTransforms "Compose")
 
 (Interpolator "LinearInterpolator")
-//(Interpolator "BSplineInterpolator")
-//(BSplineInterpolationOrder 1)
 
 
 (Metric "AdvancedNormalizedCorrelation") //This line can be modified by run_elastix. Do not change
