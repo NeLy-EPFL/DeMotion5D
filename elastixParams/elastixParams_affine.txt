@@ -9,8 +9,9 @@
 (Optimizer "StandardGradientDescent")
 (ImageSampler "Full")
 
-//(Transform "EulerTransform")
-(Transform "AffineTransform")
+//(Transform "TranslationTransform")
+(Transform "EulerTransform")
+//(Transform "AffineTransform")
 (AutomaticTransformInitialization "true")
 (AutomaticTransformInitializationMethod "CenterOfGravity")
 (AutomaticScalesEstimation "false")
