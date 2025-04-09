@@ -7,18 +7,21 @@
 (MovingImagePyramid "MovingRecursiveImagePyramid")
 (ErodeMask "false")
  
+// Optimizer
 (Optimizer "AdaptiveStochasticGradientDescent")
 (ASGDParameterEstimationMethod "DisplacementDistribution")
 //(Optimizer "StandardGradientDescent")
-//(SP_alpha 0.6)
-//(SP_A 20.0)
 //(SP_a 6000)
+
+// Sampler
+//(ImageSampler "Full")
+(ImageSampler "RandomCoordinate")
 (NumberOfSpatialSamples 2500)
-(CheckNumberOfSamples "false") //This check is useful for making sure the alignment doesn't diverge catastrophically. After checking that the affine alignment went well, catastrophic divergence is rare, so can skip this check
+(CheckNumberOfSamples "true") //This check is useful for making sure the alignment doesn't diverge catastrophically. After checking that the affine alignment went well, catastrophic divergence is rare, so can skip this check
 (MaximumNumberOfSamplingAttempts 3)
 (NewSamplesEveryIteration "true")
-(ImageSampler "RandomCoordinate")
 
+// Transform
 (Transform "RecursiveBSplineTransform")
 (FinalGridSpacingInPhysicalUnits _GRIDSPACING_) //This line can be modified by run_elastix. Do not change
 (HowToCombineTransforms "Compose")
