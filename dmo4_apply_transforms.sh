@@ -2,7 +2,7 @@
 
 show_help () {
     >&2 echo "Usage: ./4_apply_transforms.sh source_folder target_folder [target_folder2 ...]"
-    >&2 echo "                               [-v] [-f] [-c num_cores]"
+    >&2 echo "                               [-p alignment_folder_pattern] [-v] [-f] [-c num_cores]"
     >&2 echo "Apply the transforms from the source_folder to the target_folder(s)."
     >&2 echo ""
     >&2 echo "Positional arguments:"
@@ -10,6 +10,7 @@ show_help () {
     >&2 echo "  target_folder       The folder(s) containing the timepoints to be transformed."
     >&2 echo ""
     >&2 echo "Optional arguments:"
+    >&2 echo "  -p, --pattern       The pattern to match the alignment folders in the source_folder. Default: Bspline/*"
     >&2 echo "  -v, --verbose       Run in verbose mode."
     >&2 echo "  -f, --fake          Run in fake mode (don't execute commands)."
     >&2 echo "  -c, --cores         The number of cores to use for transformix (default: 28)."
@@ -24,7 +25,7 @@ fi
 verbose=false
 fake=false
 num_cores=28
-alignment_settings='Bspline/*'
+alignment_folder_pattern='Bspline/*'
 
 positionalArgs=()
 unknownOptions=()
@@ -40,8 +41,8 @@ while [ "$#" -gt 0 ]; do
             >&2 echo "Running fake"
             shift
         ;;
-        -s|--settings)
-            alignment_settings="$2"
+        -p|--pattern)
+            alignment_folder_pattern="$2"
             shift; shift
         ;;
         -c|--cores)
@@ -95,7 +96,7 @@ for target_folder in "${@:2}"; do
         echo ""
         echo "Processing $target_file"
         t=$(basename "$target_file" | sed 's/t\([0-9]*\).nrrd/\1/')
-        transform_pattern="$source_folder"/timepoints/t"$t"_elastix/${alignment_settings}/TransformParameters.0.txt
+        transform_pattern="$source_folder"/timepoints/t"$t"_elastix/${alignment_folder_pattern}/TransformParameters.0.txt
         matched_files=($transform_pattern)
         if [ ${#matched_files[@]} -gt 1 ]; then
             >&2 echo "ERROR: Multiple transforms found for timepoint $t:"
