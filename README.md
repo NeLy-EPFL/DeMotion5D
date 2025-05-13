@@ -17,5 +17,5 @@ The steps are as follows:
 1. [`dmo1_split_timepoints`](dmo1_split_timepoints.py): Make a sequence of nrrd files, one per time point per channel
 1. [`dmo2_run_elastix`](dmo2_run_elastix.sh): Run elastix to register each timepoint to a common target
 1. (Optional, not run in `dmo_pipeline.sh`) [`dmo3_assess_registrations.py`](dmo3_assess_registrations.py): Check for poor results and troubleshoot/rerun those alignments
-1. [`dmo4_apply_transformations.sh`](dmo4_apply_transformations.sh): Apply the transforms to each timepoint in other color channels
-1. [`dmo5_combine_timepoints.py`](dmo5_combine_timepoints.py): Combine all transformed timepoints into a final volume
+1. [`dmo4_apply_transforms`](dmo4_apply_transforms.sh): Apply the transforms to each timepoint in other color channels
+1. [`dmo5_combine_timepoints`](dmo5_combine_timepoints.py): Combine all transformed timepoints into a final volume
