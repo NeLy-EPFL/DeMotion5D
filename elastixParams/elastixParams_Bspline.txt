@@ -10,13 +10,14 @@
 // Optimizer
 (Optimizer "AdaptiveStochasticGradientDescent")
 (ASGDParameterEstimationMethod "DisplacementDistribution")
+(MaximumStepLength 0.2)
 //(Optimizer "StandardGradientDescent")
 //(SP_a 6000)
 
 // Sampler
 //(ImageSampler "Full")
 (ImageSampler "RandomCoordinate")
-(NumberOfSpatialSamples 2500)
+(NumberOfSpatialSamples 4000)
 (CheckNumberOfSamples "true") //This check is useful for making sure the alignment doesn't diverge catastrophically. After checking that the affine alignment went well, catastrophic divergence is rare, so can skip this check
 (MaximumNumberOfSamplingAttempts 3)
 (NewSamplesEveryIteration "true")
