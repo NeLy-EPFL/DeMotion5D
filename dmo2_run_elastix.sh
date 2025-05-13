@@ -19,13 +19,13 @@ for fn in $@; do
         $mask \
         -ap "$SCRIPT_DIR/elastixParams/elastixParams_affine.txt" \
         -bp "$SCRIPT_DIR/elastixParams/elastixParams_Bspline.txt" \
-        -s 48 \
-        -w 400 \
+        -s 36 \
+        -w 40 \
         -n
 done
 
 <<comment
-        --threads 8
+        --threads 8 \
         -a \
         -b \
         -s 64 \
