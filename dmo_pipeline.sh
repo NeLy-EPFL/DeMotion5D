@@ -1,6 +1,9 @@
 #!/bin/bash
 # This script shows the sequence of commands that can be run to register a 4D
 # image volume, and optionally apply the registration transforms to a second channel.
+# This script can be directly run and then you pray nothing goes wrong (which is possible
+# but far from guaranteed). Instead it's often useful to run the commands here one at
+# a time and manually inspect the intermediate results.
 
 nrrd_to_align="$1"
 if [ ! -f "$nrrd_to_align" ]; then
@@ -8,7 +11,7 @@ if [ ! -f "$nrrd_to_align" ]; then
   exit 1
 fi
 demotion_dir="${nrrd_to_align/.nrrd/_demotion}"
-#dmo1_split_timepoints.py "$nrrd_to_align"
+dmo1_split_timepoints.py "$nrrd_to_align"
 
 nrrd_second_channel=""
 if [ "$#" -gt 1 ]; then
