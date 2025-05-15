@@ -42,6 +42,9 @@ rm -rvf timepoints/t0000_elastix
 dmo2_run_elastix.sh timepoints/t*.nrrd
 # Combine results into a single file
 dmo5_combine_timepoints.py timepoints/t*elastix/Bspline/result*.nrrd
+echo "Removing temporary nrrd files from $(pwd)/..."
+find timepoints/ -type f -name '*.nrrd' -delete
+
 cd ..
 if [ "$(pwd)" != "$start_dir" ]; then
     echo "Error: Failed to change directory back to $start_dir."
@@ -65,7 +68,7 @@ if [ -n "$nrrd_second_channel" ]; then
     dmo5_combine_timepoints.py timepoints_transformed/t*nrrd
     mv combined.nrrd combined_redreg.nrrd
     mv combined_blur_tmax.nrrd combined_redreg_blur_tmax.nrrd
-    echo "Removing intermediate files..."
+    echo "Removing temporary nrrd files from $(pwd)/..."
     rm timepoints_transformed/t*nrrd
     rmdir timepoints_transformed/
     rm timepoints/t*nrrd
