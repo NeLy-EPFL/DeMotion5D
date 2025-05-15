@@ -130,6 +130,8 @@ if target_timepoint is None:
     n_most_correlated_timepoints = np.argsort(correlations)[-use_n_most_correlated_timepoints:]
     vprint(f'The {use_n_most_correlated_timepoints} timepoints most correlated with'
            f' the most stable time point are {n_most_correlated_timepoints}')
+    with (output_root / 'stable_timepoints.txt').open('w') as f:
+        f.write(f'Most stable timepoints: {n_most_correlated_timepoints}\n')
     stable_images = [im[t, ...] for t in n_most_correlated_timepoints]
     npimage.save(np.stack(stable_images),
                  output_root / 'stable_images.nrrd',
