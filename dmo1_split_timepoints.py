@@ -20,7 +20,7 @@ if num_frames is not None:
 
 # Argument parsing
 equalize = False
-z_to_drop = 2
+z_to_drop = 0
 planes_to_drop = 1
 target_timepoint = None
 use_n_most_correlated_timepoints = 5
