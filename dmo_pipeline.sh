@@ -1,9 +1,24 @@
 #!/bin/bash
 # This script shows the sequence of commands that can be run to register a 4D
 # image volume, and optionally apply the registration transforms to a second channel.
-# This script can be directly run and then you pray nothing goes wrong (which is possible
-# but far from guaranteed). Instead it's often useful to run the commands here one at
-# a time and manually inspect the intermediate results.
+#
+# This script can be directly run on a data file and there is some chance that the full
+# alignment process just works, but this can't be guaranteed. Instead it's often useful
+# to run the commands here one at a time and manually inspect the intermediate results.
+
+if [ "$#" -lt 1 ]; then
+    echo "Align all timepoints in a 4D NRRD file to a common target, and"
+    echo "optionally apply the alignment transformations to a second channel."
+    echo "  Usage: dmo_pipeline.sh <nrrd_to_align> [<nrrd_second_channel>]"
+    exit 1
+fi
+
+# Check required packages are available
+python3 -c "import numpy as np; from tqdm import trange; import npimage; import nrrd; from scipy.ndimage import gaussian_filter"
+if [ $? -ne 0 ]; then
+    echo "Error: Some required Python packages are not installed. Please \`pip install numpy tqdm numpyimage pynrrd scipy\`"
+    exit 1
+fi
 
 nrrd_to_align="$1"
 if [ ! -f "$nrrd_to_align" ]; then
