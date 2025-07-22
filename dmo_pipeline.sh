@@ -57,15 +57,15 @@ rm -rvf timepoints/t0000_elastix
 dmo2_run_elastix.sh timepoints/t*.nrrd
 # Combine results into a single file
 dmo5_combine_timepoints.py timepoints/t*elastix/Bspline/result*.nrrd
-echo "Removing temporary nrrd files from $(pwd)/..."
+echo "Removing all temporary nrrd files within $(pwd)"
 find timepoints/ -type f -name '*.nrrd' -delete
 
-cd ..
+cd "$start_dir"
 if [ "$(pwd)" != "$start_dir" ]; then
     echo "Error: Failed to change directory back to $start_dir."
     exit 1
 fi
-ln -s "$demotion_dir"/combined_*w.nrrd "${nrrd_to_align/.nrrd/_demotioned.nrrd}"
+ln -s "$(basename "$demotion_dir")"/"$(basename "$demotion_dir"/combined_*w.nrrd)" "${nrrd_to_align/.nrrd/_demotioned.nrrd}"
 
 # Apply transformations to the second channel, if provided
 if [ -n "$nrrd_second_channel" ]; then
@@ -83,15 +83,16 @@ if [ -n "$nrrd_second_channel" ]; then
     dmo5_combine_timepoints.py timepoints_transformed/t*nrrd
     mv combined.nrrd combined_redreg.nrrd
     mv combined_blur_tmax.nrrd combined_redreg_blur_tmax.nrrd
-    echo "Removing temporary nrrd files from $(pwd)/..."
-    rm timepoints_transformed/t*nrrd
+    echo "Removing temporary nrrd files $(pwd)/timepoints_transformed/t*.nrrd"
+    rm timepoints_transformed/t*.nrrd
     rmdir timepoints_transformed/
-    rm timepoints/t*nrrd
+    echo "Removing temporary nrrd files $(pwd)/timepoints/t*.nrrd"
+    rm timepoints/t*.nrrd
     rmdir timepoints/
-    cd ..
+    cd "$start_dir"
     if [ "$(pwd)" != "$start_dir" ]; then
         echo "Error: Failed to change directory back to $start_dir."
         exit 1
     fi
-    ln -s "$demotion_dir_2"/combined_redreg.nrrd "${nrrd_second_channel/.nrrd/_demotioned.nrrd}"
+    ln -s "$(basename "$demotion_dir_2")"/combined_redreg.nrrd "${nrrd_second_channel/.nrrd/_demotioned.nrrd}"
 fi
