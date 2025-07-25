@@ -9,7 +9,9 @@
 if [ "$#" -lt 1 ]; then
     echo "Align all timepoints in a 4D NRRD file to a common target, and"
     echo "optionally apply the alignment transformations to a second channel."
-    echo "  Usage: dmo_pipeline.sh <nrrd_to_align> [<nrrd_second_channel>]"
+    echo "Usage:"
+    echo "  dmo_pipeline.sh <nrrd_to_align> [<nrrd_second_channel>]"
+    echo "  dmo_pipeline.sh <folder_containing_*red.nrrd_and_*green.nrrd>"
     exit 1
 fi
 
@@ -20,23 +22,60 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-nrrd_to_align="$1"
+nrrd_to_align=""
+nrrd_second_channel=""
+if [ -f "$1" ]; then
+    nrrd_to_align="$1"
+fi
+if [ "$#" -gt 1 ]; then
+    nrrd_second_channel="$2"
+elif [ -d "$1" ]; then
+    red_nrrds=("$1"/*_red.nrrd)
+    # Check if there's exactly one red nrrd, if so, use it
+    if [ "${#red_nrrds[@]}" -eq 1 ]; then
+        nrrd_to_align="${red_nrrds[0]}"
+
+        # Check if there's exactly one green nrrd
+        green_nrrds=("$1"/*_green.nrrd)
+        if [ "${#green_nrrds[@]}" -eq 1 ]; then
+            nrrd_second_channel="${green_nrrds[0]}"
+        elif [ "${#green_nrrds[@]}" -gt 1 ]; then
+            echo "ERROR: More than one *_green.nrrd found in directory $1"
+            exit 1
+        fi
+    elif [ "${#red_nrrds[@]}" -gt 1 ]; then
+        echo "ERROR: More than one *_red.nrrd found in directory $1"
+        exit 1
+    else
+        all_nrrds=("$1"/*.nrrd)
+        if [ "${#all_nrrds[@]}" -eq 0 ]; then
+            echo "ERROR: No NRRD files found in directory $1"
+            exit 1
+        fi
+        if [ "${#all_nrrds[@]}" -gt 1 ]; then
+            echo "ERROR: Multiple nrrd files found in directory $1"
+            exit 1
+        fi
+        nrrd_to_align="${all_nrrds[0]}"
+    fi
+fi
+
 if [ ! -f "$nrrd_to_align" ]; then
   echo "Error: $nrrd_to_align file not found."
   exit 1
 fi
+echo "Performing motion correction on $nrrd_to_align"
 demotion_dir="${nrrd_to_align/.nrrd/_demotion}"
-dmo1_split_timepoints.py "$nrrd_to_align"
-
-nrrd_second_channel=""
-if [ "$#" -gt 1 ]; then
-    nrrd_second_channel="$2"
+if [ -n "$nrrd_second_channel" ]; then
     if [ ! -f "$nrrd_second_channel" ]; then
         echo "Error: $nrrd_second_channel file not found."
         exit 1
     fi
+    echo "Then applying the corrections computed in the first step to $nrrd_second_channel"
     demotion_dir_2="${nrrd_second_channel/.nrrd/_demotion}"
 fi
+
+dmo1_split_timepoints.py "$nrrd_to_align"
 
 
 start_dir=$(pwd)
