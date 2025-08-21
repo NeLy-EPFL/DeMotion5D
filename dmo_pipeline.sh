@@ -75,7 +75,7 @@ if [ -n "$nrrd_second_channel" ]; then
     demotion_dir_2="${nrrd_second_channel/.nrrd/_demotion}"
 fi
 
-dmo1_split_timepoints.py "$nrrd_to_align"
+dmo1_split_timepoints.py "$nrrd_to_align" -o
 
 
 start_dir=$(pwd)
@@ -108,7 +108,7 @@ ln -s "$(basename "$demotion_dir")"/"$(basename "$demotion_dir"/combined_*w.nrrd
 
 # Apply transformations to the second channel, if provided
 if [ -n "$nrrd_second_channel" ]; then
-    dmo1_split_timepoints.py "$nrrd_second_channel" -t -1
+    dmo1_split_timepoints.py "$nrrd_second_channel" -t -1 -o
     dmo4_apply_transforms.sh "$demotion_dir" "$demotion_dir_2"
 
     wd="$(pwd)"
