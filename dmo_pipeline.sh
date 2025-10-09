@@ -10,8 +10,8 @@ if [ "$#" -lt 1 ]; then
     echo "Align all timepoints in a 4D NRRD file to a common target, and"
     echo "optionally apply the alignment transformations to a second channel."
     echo "Usage:"
-    echo "  dmo_pipeline.sh <nrrd_to_align> [<nrrd_second_channel>]"
-    echo "  dmo_pipeline.sh <folder_containing_*red.nrrd_and_*green.nrrd>"
+    echo "  dmo_pipeline.sh <nrrd_to_align> [<nrrd_second_channel>] [-z|--z-crop <num_z_planes_to_crop>]"
+    echo "  dmo_pipeline.sh <folder_containing_*red.nrrd_and_*green.nrrd> [-z|--z-crop <num_z_planes_to_crop>]"
     exit 1
 fi
 
@@ -19,6 +19,37 @@ fi
 python3 -c "import numpy as np; from tqdm import trange; import npimage; import nrrd; from scipy.ndimage import gaussian_filter"
 if [ $? -ne 0 ]; then
     echo "Error: Some required Python packages are not installed. Please \`pip install numpy tqdm numpyimage pynrrd scipy\`"
+    exit 1
+fi
+
+# Parse arguments
+positionalArgs=()
+unknownOptions=()
+zcrop_arg=""
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        -z|--z-crop)
+            zcrop_arg="-z $2"
+            shift; shift
+            ;;
+        *)  # Catch all other arguments
+            if [ " ${1:0:1}" = " -" ]; then  # Ignore arguments starting with - that aren't explicitly listed above
+                unknownOptions+=("$1")
+                >&2 echo "WARNING: Unknown option $1, ignoring"
+            else
+                if [ -z "${1/* */}" ]; then
+                    >&2 echo "Spaces are not allowed inside positional args because they break too many things: $1"
+                    exit 1
+                fi
+                positionalArgs+=("$1")  # Store arguments (other than ones recognized above) in order
+            fi
+            shift
+            ;;
+    esac
+done
+set -- "${positionalArgs[@]}"  # Set the positional arguments, now without any of the options/flags arguments
+if [ "$#" -eq 0 ]; then
+    show_help
     exit 1
 fi
 
@@ -75,7 +106,7 @@ if [ -n "$nrrd_second_channel" ]; then
     demotion_dir_2="${nrrd_second_channel/.nrrd/_demotion}"
 fi
 
-dmo1_split_timepoints.py "$nrrd_to_align" -o
+dmo1_split_timepoints.py "$nrrd_to_align" -o $zcrop_arg
 
 
 start_dir=$(pwd)
