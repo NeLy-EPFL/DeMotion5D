@@ -82,7 +82,7 @@ if not metadata_4d['space dimension'] == 4:
 planes_to_keep = slice(planes_to_drop, -planes_to_drop if planes_to_drop else None)
 # Discard the first few and last few z (depth) indices, which typically have
 # some artifacts from I think a bug in Andor Solis's recording settings.
-z_to_keep = slice(z_to_drop, -z_to_drop if z_to_drop else None)
+z_to_keep = slice(z_to_drop, -z_to_drop) if z_to_drop else slice(None)
 im = im[:num_frames, planes_to_keep, z_to_keep, :]
 vprint('im.shape after discarding edge planes and z indices:', im.shape)
 
