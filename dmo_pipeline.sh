@@ -115,6 +115,13 @@ if [ "$(pwd)" = "$start_dir" ]; then
     echo "Error: Failed to change directory to $demotion_dir."
     exit 1
 fi
+for candidate in "demotion_mask" "alignment_mask" "registration_mask" "target_mask" "mask"; do
+    if [ -f "../${candidate}.nrrd" ]; then
+        ln -s "../${candidate}.nrrd" ./target_mask.nrrd
+        echo "Using ../${candidate}.nrrd as alignment mask"
+        break
+    fi
+done
 
 # Test one alignment and make sure it produces output
 dmo2_run_elastix.sh timepoints/t0000.nrrd
