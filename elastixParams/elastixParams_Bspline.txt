@@ -10,7 +10,7 @@
 // Optimizer
 (Optimizer "AdaptiveStochasticGradientDescent")
 (ASGDParameterEstimationMethod "DisplacementDistribution")
-(MaximumStepLength 0.2)
+(MaximumStepLength 0.15)
 //(Optimizer "StandardGradientDescent")
 //(SP_a 6000)
 
