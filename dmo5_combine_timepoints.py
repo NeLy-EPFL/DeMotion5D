@@ -5,7 +5,7 @@ Typically used to combine multiple 3D volumes each representing a
 different timepoint into a single 4D volume.
 
 If a file named 'target.nrrd' exists in the current directory and is
-a symlink to a file with a 4 digit number in its name, or if a
+a hard link to a file with a 4 digit number in its name, or if a
 timepoint is specified via the -t <number> option, that timepoint
 will be replaced by 'target.nrrd' in the combined volume.
 
@@ -46,11 +46,14 @@ if '-t' in sys.argv:
     sys.argv.remove('-t')
     sys.argv.remove(str(target_timepoint))
 elif Path('target.nrrd').exists():
-    # Extract the target of the symlink
-    try:
-        target_timepoint = int(Path('target.nrrd').resolve().stem.strip('t'))
-    except ValueError:
-        print('WARNING: Could not determine target timepoint, so not using one')
+    # Find which timepoint file is the same file as target.nrrd (via hard link)
+    for tp_file in sorted(Path('timepoints').glob('t*.nrrd')):
+        if os.path.samefile('target.nrrd', tp_file):
+            try:
+                target_timepoint = int(tp_file.stem.strip('t'))
+            except ValueError:
+                print('WARNING: Could not determine target timepoint, so not using one')
+            break
 
 filenames = sorted(sys.argv[1:])
 if target_timepoint >= 0:

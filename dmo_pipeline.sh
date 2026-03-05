@@ -117,7 +117,7 @@ if [ "$(pwd)" = "$start_dir" ]; then
 fi
 for candidate in "demotion_mask" "alignment_mask" "registration_mask" "target_mask" "mask"; do
     if [ -f "../${candidate}.nrrd" ]; then
-        ln -s "../${candidate}.nrrd" ./target_mask.nrrd
+        ln "../${candidate}.nrrd" ./target_mask.nrrd
         echo "Using ../${candidate}.nrrd as alignment mask"
         break
     fi
@@ -142,7 +142,7 @@ if [ "$(pwd)" != "$start_dir" ]; then
     echo "Error: Failed to change directory back to $start_dir."
     exit 1
 fi
-ln -s "$(basename "$demotion_dir")"/"$(basename "$demotion_dir"/combined_*w.nrrd)" "${nrrd_to_align/.nrrd/_demotioned.nrrd}"
+ln "$(basename "$demotion_dir")"/"$(basename "$demotion_dir"/combined_*w.nrrd)" "${nrrd_to_align/.nrrd/_demotioned.nrrd}"
 
 # Apply transformations to the second channel, if provided
 if [ -n "$nrrd_second_channel" ]; then
@@ -171,5 +171,5 @@ if [ -n "$nrrd_second_channel" ]; then
         echo "Error: Failed to change directory back to $start_dir."
         exit 1
     fi
-    ln -s "$(basename "$demotion_dir_2")"/combined_redreg.nrrd "${nrrd_second_channel/.nrrd/_demotioned.nrrd}"
+    ln "$(basename "$demotion_dir_2")"/combined_redreg.nrrd "${nrrd_second_channel/.nrrd/_demotioned.nrrd}"
 fi
