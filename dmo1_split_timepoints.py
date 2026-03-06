@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 import sys
 from pathlib import Path
 
@@ -153,6 +154,6 @@ for t in trange(0, im.shape[0], interval):
 
 if not (output_root / 'target.nrrd').exists():
     if target_timepoint is None:
-        (output_root / 'target.nrrd').symlink_to('mean_stable_image.nrrd')
+        os.link(output_root / 'mean_stable_image.nrrd', output_root / 'target.nrrd')
     else:
-        (output_root / 'target.nrrd').symlink_to(f'timepoints/t{target_timepoint:04d}.nrrd')
+        os.link(output_root / 'timepoints' / f't{target_timepoint:04d}.nrrd', output_root / 'target.nrrd')
