@@ -130,16 +130,6 @@ globbed `rm`. Do not rephrase around these. Instead write the deletion as a
 script driven by a pre-audited file manifest, and have the user run it
 themselves.
 
-## Downstream: always analyze the demotioned data
-
-All downstream analysis (ROI trace extraction, unmixing, encoding
-models) must run on the demotioned volumes, never on the raw
-`<scan>_red.nrrd` / `<scan>_green.nrrd`, which still contain motion that
-corrupts per-pixel brightness traces. Load the demotioned data through
-`scapeio.load_scan(scan)` (its `demotioned=True` default already does
-this) rather than reading the `.nrrd` yourself — see the `using-scapeio`
-skill for the loading/caching details.
-
 ## Related
 
 - `scape-processing-pipeline` — runs demotion as one stage of the full
